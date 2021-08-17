@@ -1,4 +1,4 @@
-module gitlab.com/jje42/atgclogs
+module github.com/jje42/atgclogs
 
 go 1.16
 
