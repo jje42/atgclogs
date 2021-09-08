@@ -28,6 +28,7 @@ type Header struct {
 	FlowCellType        string
 	Version             string
 	RunType             string
+	Workflow            string
 }
 
 func New(fn string) (RunSheet, error) {
@@ -83,6 +84,8 @@ func New(fn string) (RunSheet, error) {
 			header.Version = row[1]
 		case "Run Type":
 			header.RunType = row[1]
+		case "Workflow":
+			header.Workflow = row[1]
 		}
 		if rowIdx == headerRow {
 			for i, col := range row {
