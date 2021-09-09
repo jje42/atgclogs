@@ -29,6 +29,7 @@ type Header struct {
 	Version             string
 	RunType             string
 	Workflow            string
+	Indexing            string
 }
 
 func New(fn string) (RunSheet, error) {
@@ -86,6 +87,8 @@ func New(fn string) (RunSheet, error) {
 			header.RunType = row[1]
 		case "Workflow":
 			header.Workflow = row[1]
+		case "Indexing":
+			header.Indexing = row[1]
 		}
 		if rowIdx == headerRow {
 			for i, col := range row {
