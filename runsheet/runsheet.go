@@ -2,6 +2,7 @@ package runsheet
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
 )
@@ -30,6 +31,10 @@ type Header struct {
 	RunType             string
 	Workflow            string
 	Indexing            string
+	Read1Cycles         int
+	Read2Cycles         int
+	I7IndexReadCycles   int
+	I5IndexReadCycles   int
 }
 
 func New(fn string) (RunSheet, error) {
@@ -89,6 +94,30 @@ func New(fn string) (RunSheet, error) {
 			header.Workflow = row[1]
 		case "Indexing":
 			header.Indexing = row[1]
+		case "Read 1 Cycles":
+			n, err := strconv.Atoi(row[1])
+			if err != nil {
+				return RunSheet{Filename: fn}, err
+			}
+			header.Read1Cycles = n
+		case "Read 2 Cycles":
+			n, err := strconv.Atoi(row[1])
+			if err != nil {
+				return RunSheet{Filename: fn}, err
+			}
+			header.Read2Cycles = n
+		case "i7 Index Read Cycles":
+			n, err := strconv.Atoi(row[1])
+			if err != nil {
+				return RunSheet{Filename: fn}, err
+			}
+			header.I7IndexReadCycles = n
+		case "i5 Index Read Cycles":
+			n, err := strconv.Atoi(row[1])
+			if err != nil {
+				return RunSheet{Filename: fn}, err
+			}
+			header.I5IndexReadCycles = n
 		}
 		if rowIdx == headerRow {
 			for i, col := range row {
