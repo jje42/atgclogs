@@ -82,113 +82,23 @@ func getHeaderMap(f *excelize.File, sheet string) (map[string]int, error) {
 }
 
 func (s *Scanner) Scan() bool {
-	uin, err := s.getFormattedString("SampleName", s.curRow)
+	sample, err := s.readSample()
 	if err != nil {
 		s.err = err
 		return false
 	}
-	if uin == "" {
+	// Do
+	for sample.Status == "NO TEST - Do No Process" || sample.Status == "Duplicate - Exclude" {
+		s.curRow++
+		sample, err = s.readSample()
+		if err != nil {
+			s.err = err
+			return false
+		}
+	}
+	if sample.UIN == "" {
 		s.err = nil
 		return false
-	}
-	receiptDate, err := s.getTime("Receipt date", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	collectionDate, err := s.getTime("Sample Collection Date", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	consentDate, err := s.getTime("Consent Received date", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	urn, err := s.getFormattedString("UR", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	fin, err := s.getFormattedString("FIN", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	name, err := s.getFormattedString("PatientName", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	dob, err := s.getTime("DOB", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	gender, err := s.getFormattedString("Gender", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	subjectID, err := s.getFormattedString("SubjectID", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	preservationMethod, err := s.getFormattedString("TissuePreservationType", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	sampleType, err := s.getFormattedString("SampleType", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	reportType, err := s.getFormattedString("ReportType", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	disease, err := s.getFormattedString("Disease", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	requestingClinician, err := s.getFormattedString("Requesting Clinician", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	comments, err := s.getFormattedString("Comments", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	status, err := s.getFormattedString("Status", s.curRow)
-	if err != nil {
-		s.err = err
-		return false
-	}
-	sample := Sample{
-		UIN:                  uin,
-		Status:               status,
-		ReceiptDate:          Date{receiptDate},
-		SampleCollectionDate: Date{collectionDate},
-		ConsentReceivedDate:  Date{consentDate},
-		URN:                  urn,
-		FIN:                  fin,
-		PatientName:          name,
-		DOB:                  Date{dob},
-		Gender:               gender,
-		SubjectID:            subjectID,
-		PreservationMethod:   preservationMethod,
-		SampleType:           sampleType,
-		ReportType:           reportType,
-		Disease:              disease,
-		RequestingClinician:  requestingClinician,
-		Comments:             comments,
 	}
 	// Validate sample.
 	if sample.Gender != "MALE" && sample.Gender != "FEMALE" && sample.Gender != "" {
@@ -210,6 +120,101 @@ func (s *Scanner) Scan() bool {
 	s.err = nil
 	s.curRow++
 	return true
+}
+
+func (s *Scanner) readSample() (Sample, error) {
+	uin, err := s.getFormattedString("SampleName", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	//if uin == "" {
+	//s.err = nil
+	//return false
+	//}
+	receiptDate, err := s.getTime("Receipt date", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	collectionDate, err := s.getTime("Sample Collection Date", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	consentDate, err := s.getTime("Consent Received date", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	urn, err := s.getFormattedString("UR", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	fin, err := s.getFormattedString("FIN", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	name, err := s.getFormattedString("PatientName", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	dob, err := s.getTime("DOB", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	gender, err := s.getFormattedString("Gender", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	subjectID, err := s.getFormattedString("SubjectID", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	preservationMethod, err := s.getFormattedString("TissuePreservationType", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	sampleType, err := s.getFormattedString("SampleType", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	reportType, err := s.getFormattedString("ReportType", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	disease, err := s.getFormattedString("Disease", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	requestingClinician, err := s.getFormattedString("Requesting Clinician", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	comments, err := s.getFormattedString("Comments", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	status, err := s.getFormattedString("Status", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	sample := Sample{
+		UIN:                  uin,
+		Status:               status,
+		ReceiptDate:          Date{receiptDate},
+		SampleCollectionDate: Date{collectionDate},
+		ConsentReceivedDate:  Date{consentDate},
+		URN:                  urn,
+		FIN:                  fin,
+		PatientName:          name,
+		DOB:                  Date{dob},
+		Gender:               gender,
+		SubjectID:            subjectID,
+		PreservationMethod:   preservationMethod,
+		SampleType:           sampleType,
+		ReportType:           reportType,
+		Disease:              disease,
+		RequestingClinician:  requestingClinician,
+		Comments:             comments,
+	}
+	return sample, nil
 }
 
 func (s *Scanner) Error() error {
