@@ -2,7 +2,6 @@ package weslog
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -195,17 +194,17 @@ func (s *Scanner) Scan() bool {
 		s.err = fmt.Errorf("found a unknown gender: '%s'", sample.Gender)
 		return false
 	}
-	if !sample.ReceiptDate.IsZero() && !sample.SampleCollectionDate.IsZero() {
-		if sample.ReceiptDate.Time.Before(sample.SampleCollectionDate.Time) {
-			log.Printf("found a sample with a receipt date before collection date: %v\t%v (%s, row %d)",
-				sample.ReceiptDate, sample.SampleCollectionDate, sample.UIN, s.curRow+1)
-		}
-	}
-	if !sample.SampleCollectionDate.IsZero() && !sample.DOB.IsZero() {
-		if sample.SampleCollectionDate.Time.Before(sample.DOB.Time) {
-			log.Printf("found sample collected before DOB: %s (row %d) %v %v", sample.UIN, s.curRow+1, sample.SampleCollectionDate, sample.DOB)
-		}
-	}
+	//if !sample.ReceiptDate.IsZero() && !sample.SampleCollectionDate.IsZero() {
+	//        if sample.ReceiptDate.Time.Before(sample.SampleCollectionDate.Time) {
+	//                log.Printf("found a sample with a receipt date before collection date: %v\t%v (%s, row %d)",
+	//                        sample.ReceiptDate, sample.SampleCollectionDate, sample.UIN, s.curRow+1)
+	//        }
+	//}
+	//if !sample.SampleCollectionDate.IsZero() && !sample.DOB.IsZero() {
+	//        if sample.SampleCollectionDate.Time.Before(sample.DOB.Time) {
+	//                log.Printf("found sample collected before DOB: %s (row %d) %v %v", sample.UIN, s.curRow+1, sample.SampleCollectionDate, sample.DOB)
+	//        }
+	//}
 	s.nextSample = sample
 	s.err = nil
 	s.curRow++
