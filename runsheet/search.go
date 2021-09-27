@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -28,11 +29,15 @@ func Find(runSheetFolder string, excludeList []string) []string {
 	return runSheetFiles
 }
 
+func isRunsheetFile(f os.FileInfo) bool {
+	return !f.IsDir() && (strings.HasPrefix(f.Name(), "NovaSeq") || strings.HasPrefix(f.Name(), "NextSeq")) && strings.HasSuffix(f.Name(), ".xlsx")
+}
+
 func readRunSheets(runSheetFolder string, excludeList []string) chan searchResult {
 	fs, _ := ioutil.ReadDir(runSheetFolder)
 	runSheetFiles := []string{}
 	for _, f := range fs {
-		if !f.IsDir() && strings.HasPrefix(f.Name(), "NovaSeq") && strings.HasSuffix(f.Name(), ".xlsx") {
+		if isRunsheetFile(f) {
 			if isNotExcluded(f.Name(), excludeList) {
 				fn := filepath.Join(runSheetFolder, f.Name())
 				runSheetFiles = append(runSheetFiles, fn)

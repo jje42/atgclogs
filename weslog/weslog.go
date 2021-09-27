@@ -2,6 +2,7 @@ package weslog
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 )
 
 type Sample struct {
+	Record               string
 	UIN                  string `csv:"uin"`
 	Status               string `csv:"status"`
 	ReceiptDate          Date   `csv:"receipt_date"`
@@ -17,7 +19,7 @@ type Sample struct {
 	ConsentReceivedDate  Date   `csv:"consent_received_date"`
 	URN                  string `csv:"urn"`
 	FIN                  string `csv:"fin"`
-	PatientName          string `csv:"pateint_name"`
+	PatientName          string `csv:"patient_name"`
 	DOB                  Date   `csv:"dob"`
 	Gender               string `csv:"sex"`
 	SubjectID            string `csv:"subject_id"`
@@ -95,7 +97,7 @@ func (s *Scanner) Scan() bool {
 			return false
 		}
 	}
-	if sample.UIN == "" {
+	if sample.UIN == "" && sample.SubjectID == "" {
 		s.err = nil
 		return false
 	}
@@ -130,6 +132,10 @@ func (s *Scanner) readSample() (Sample, error) {
 	//s.err = nil
 	//return false
 	//}
+	record, err := s.getFormattedString("Record", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
 	receiptDate, err := s.getTime("Receipt date", s.curRow)
 	if err != nil {
 		return Sample{}, err
@@ -156,7 +162,10 @@ func (s *Scanner) readSample() (Sample, error) {
 	}
 	dob, err := s.getTime("DOB", s.curRow)
 	if err != nil {
-		return Sample{}, err
+		// return Sample{}, fmt.Errorf("failed to get DOB: %w", err)
+		log.Printf("failed to get DOB, using null value: %s", err)
+		dob = time.Time{}
+
 	}
 	gender, err := s.getFormattedString("Gender", s.curRow)
 	if err != nil {
@@ -195,6 +204,7 @@ func (s *Scanner) readSample() (Sample, error) {
 		return Sample{}, err
 	}
 	sample := Sample{
+		Record:               record,
 		UIN:                  uin,
 		Status:               status,
 		ReceiptDate:          Date{receiptDate},

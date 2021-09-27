@@ -2,7 +2,9 @@ package runsheet
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
 )
@@ -20,21 +22,21 @@ type RunSheet struct {
 }
 
 type Header struct {
-	SequencingStartDate string
-	InstrumentName      string
-	RunNumber           string
-	FlowCellPosition    string
-	FlowCellID          string
-	RunName             string
-	FlowCellType        string
-	Version             string
-	RunType             string
-	Workflow            string
-	Indexing            string
-	Read1Cycles         int
-	Read2Cycles         int
-	I7IndexReadCycles   int
-	I5IndexReadCycles   int
+	SequencingStartDate string `csv:"sequencing_start_date"`
+	InstrumentName      string `csv:"instrument_name"`
+	RunNumber           string `csv:"run_number"`
+	FlowCellPosition    string `csv:"flowcell_position"`
+	FlowCellID          string `csv:"flowcell_id"`
+	RunName             string `csv:"run_name"`
+	FlowCellType        string `csv:"flowcell_type"`
+	Version             string `csv:"version"`
+	RunType             string `csv:"run_type"`
+	Workflow            string `csv:"workflow"`
+	Indexing            string `csv:"indexing"`
+	Read1Cycles         int    `csv:"read1_cycles"`
+	Read2Cycles         int    `csv:"read2_cycles"`
+	I7IndexReadCycles   int    `csv:"i7_index_read_cycles"`
+	I5IndexReadCycles   int    `csv:"i5_index_read_cycles"`
 }
 
 func New(fn string) (RunSheet, error) {
@@ -71,15 +73,28 @@ func New(fn string) (RunSheet, error) {
 		if err != nil {
 			return RunSheet{Filename: fn}, err
 		}
+		if len(row) == 0 {
+			return RunSheet{Filename: fn}, fmt.Errorf("found 0 length row: %d", rowIdx)
+		}
 		switch row[0] {
 		case "Sequencing Start Date":
-			header.SequencingStartDate = row[1]
+			if row[1] == "" {
+				return RunSheet{Filename: fn}, fmt.Errorf("sequencing start date is empty: %s", filepath.Base(fn))
+			}
+			t, err := time.Parse("01-02-06", row[1])
+			if err != nil {
+				return RunSheet{Filename: fn}, fmt.Errorf("unable to parse sequencing start date: %w", err)
+			}
+			header.SequencingStartDate = t.Format("02/01/2006")
 		case "Instrument Name":
 			header.InstrumentName = row[1]
 		case "Run Number":
 			header.RunNumber = row[1]
 		case "Flow Cell Position":
 			header.FlowCellPosition = row[1]
+			if !(row[1] == "A" || row[1] == "B") {
+				return RunSheet{Filename: fn}, fmt.Errorf("flow cell positions was %s. Expected A or B", row[1])
+			}
 		case "Flow Cell ID":
 			header.FlowCellID = row[1]
 		case "Run Name":
@@ -161,20 +176,20 @@ func (r RunSheet) NewScanner() *Scanner {
 }
 
 type Sample struct {
-	ID          string
-	UIN         string
-	Lane        string
-	SubjectID   string
-	ProjectID   string
-	Cohort      string
-	LibraryType string
-	CaptureType string
-	LibraryID   string
-	CaptureID   string
-	Index       string
-	Index2      string
-	I7IndexID   string
-	I5IndexID   string
+	ID          string `csv:"id"`
+	UIN         string `csv:"uin"`
+	Lane        string `csv:"lane"`
+	SubjectID   string `csv:"subject_id"`
+	ProjectID   string `csv:"project_id"`
+	Cohort      string `csv:"cohort"`
+	LibraryType string `csv:"library_type"`
+	CaptureType string `csv:"capture_type"`
+	LibraryID   string `csv:"library_id"`
+	CaptureID   string `csv:"capture_id"`
+	Index       string `csv:"index"`
+	Index2      string `csv:"index2"`
+	I7IndexID   string `csv:"i7_index_id"`
+	I5IndexID   string `csv:"i5_index_id"`
 }
 
 type Scanner struct {
