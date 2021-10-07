@@ -3,7 +3,7 @@ package arraylog
 import (
 	"fmt"
 
-	"github.com/360EntSecGroup-Skylar/excelize/v2"
+	"github.com/xuri/excelize/v2"
 )
 
 // Sample represents a row from the "IFM Queue" sheet in the array log. There is
