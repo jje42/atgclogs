@@ -29,6 +29,18 @@ type Sample struct {
 	Disease              string `csv:"disease"`
 	RequestingClinician  string `csv:"requesting_clinician"`
 	Comments             string `csv:"comments"`
+	ProjectID            string `csv:"project_id"`
+	TissueSourceType     string `csv:"tissue_source_type"`
+	NucleicType          string `csv:"nucleic_type"`
+	PrimaryTumourSite    string `csv:"primary_tumour_site"`
+	TumourContent        string `csv:"tumour_content"`
+	RequestDate          string `csv:"request_date"`
+	RequestingDoctor     string `csv:"requesting_doctor"`
+	Consultant           string `csv:"consultant"`
+	SourceLaboratory     string `csv:"source_laboratory"`
+	Auslab               string `csv:"auslab"`
+	AnatomicalPathology  string `csv:"anatomical_pathology"`
+	EMR                  string `csv:"emr"`
 }
 
 type Scanner struct {
@@ -203,6 +215,56 @@ func (s *Scanner) readSample() (Sample, error) {
 	if err != nil {
 		return Sample{}, err
 	}
+
+	projectID, err := s.getFormattedString("ProjectID", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	tissueSourceType, err := s.getFormattedString("TissueSourceType", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	nucleicType, err := s.getFormattedString("NucleicType", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	primaryTumourSite, err := s.getFormattedString("Primary Tumour Site", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	tumourContent, err := s.getFormattedString("Tumour Content", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	requestDate, err := s.getFormattedString("Request Date", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	requestingDoctor, err := s.getFormattedString("Requesting Doctor", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	consultant, err := s.getFormattedString("Consultant", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	sourceLaboratory, err := s.getFormattedString("Source Laboratory", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	auslab, err := s.getFormattedString("Auslab", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	anatomicalPathology, err := s.getFormattedString("Anatomical Pathology", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+	emr, err := s.getFormattedString("EMR", s.curRow)
+	if err != nil {
+		return Sample{}, err
+	}
+
 	sample := Sample{
 		Record:               record,
 		UIN:                  uin,
@@ -214,7 +276,7 @@ func (s *Scanner) readSample() (Sample, error) {
 		FIN:                  fin,
 		PatientName:          name,
 		DOB:                  Date{dob},
-		Gender:               gender,
+		Gender:               strings.ToUpper(gender),
 		SubjectID:            subjectID,
 		PreservationMethod:   preservationMethod,
 		SampleType:           sampleType,
@@ -222,6 +284,18 @@ func (s *Scanner) readSample() (Sample, error) {
 		Disease:              disease,
 		RequestingClinician:  requestingClinician,
 		Comments:             comments,
+		ProjectID:            projectID,
+		TissueSourceType:     tissueSourceType,
+		NucleicType:          nucleicType,
+		PrimaryTumourSite:    primaryTumourSite,
+		TumourContent:        tumourContent,
+		RequestDate:          requestDate,
+		RequestingDoctor:     requestingDoctor,
+		Consultant:           consultant,
+		SourceLaboratory:     sourceLaboratory,
+		Auslab:               auslab,
+		AnatomicalPathology:  anatomicalPathology,
+		EMR:                  emr,
 	}
 	return sample, nil
 }
