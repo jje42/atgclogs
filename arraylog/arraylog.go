@@ -6,14 +6,26 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
 )
 
+// Sample represents a row from the "IFM Queue" sheet in the array log. There is
+// additional clinical information in the "Sample Log" sheet; however, it is
+// mostly unpopulated as we are not processing clinical samples at the moment.
+// The "Sample Log" sheet is currently not parsed. These clinical columns also
+// appear in the "IFM Queue" sheet, but it is not clear if they are guarenteed
+// to be populated.
 type Sample struct {
-	UIN             string
-	SubjectID       string
-	ProjectID       string
-	InfiniumID      string
-	BeadChipVersion string
-	SentrixID       string
-	SentrixPosition string
+	UIN                string
+	SubjectID          string
+	ProjectID          string
+	InfiniumID         string
+	BeadChipVersion    string
+	SentrixID          string
+	SentrixPosition    string
+	IlluminaID         string
+	NumInAssay         string
+	BeadChipBatch      string
+	GenotypingCallRate string
+	Exclude            string
+	ExcludeReason      string
 }
 
 type Scanner struct {
@@ -79,13 +91,38 @@ func (s *Scanner) Scan() bool {
 		s.err = err
 		return false
 	}
+	exclude, err := s.getFormattedString("Exclude", s.curRow)
+	if err != nil {
+		s.err = err
+		return false
+	}
+	numInAssay, err := s.getFormattedString("# in assay", s.curRow)
+	if err != nil {
+		s.err = err
+		return false
+	}
+	beadChipBatch, err := s.getFormattedString("Beadchip batch", s.curRow)
+	if err != nil {
+		s.err = err
+		return false
+	}
+	genotypingCallRate, err := s.getFormattedString("Genotyping call rate ", s.curRow)
+	if err != nil {
+		s.err = err
+		return false
+	}
 	sample := Sample{
-		UIN:             uin,
-		SubjectID:       subjectID,
-		ProjectID:       projectID,
-		BeadChipVersion: beadChipVersion,
-		SentrixID:       sentrixID,
-		SentrixPosition: sentrixPosition,
+		UIN:                uin,
+		SubjectID:          subjectID,
+		ProjectID:          projectID,
+		BeadChipVersion:    beadChipVersion,
+		SentrixID:          sentrixID,
+		SentrixPosition:    sentrixPosition,
+		IlluminaID:         sentrixID + "_" + sentrixPosition,
+		Exclude:            exclude,
+		NumInAssay:         numInAssay,
+		BeadChipBatch:      beadChipBatch,
+		GenotypingCallRate: genotypingCallRate,
 	}
 	s.nextSample = sample
 	s.err = nil
