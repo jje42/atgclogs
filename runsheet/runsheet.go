@@ -67,6 +67,84 @@ func New(fn string) (RunSheet, error) {
 		return RunSheet{Filename: fn}, err
 	}
 	rowIdx := -1
+
+	for i := 1; i < dataIdx; i++ {
+		axis, err := excelize.CoordinatesToCellName(1, i)
+		if err != nil {
+			return RunSheet{Filename: fn}, err
+		}
+		key, err := f.GetCellValue(sheetName, axis)
+		if err != nil {
+			return RunSheet{Filename: fn}, err
+		}
+		axis, err = excelize.CoordinatesToCellName(2, i)
+		if err != nil {
+			return RunSheet{Filename: fn}, err
+		}
+		value, err := f.GetCellValue(sheetName, axis)
+		if err != nil {
+			return RunSheet{Filename: fn}, err
+		}
+		switch key {
+		case "Sequencing Start Date":
+			if value == "" {
+				return RunSheet{Filename: fn}, fmt.Errorf("sequencing start date is empty: %s", filepath.Base(fn))
+			}
+			t, err := time.Parse("01-02-06", value)
+			if err != nil {
+				return RunSheet{Filename: fn}, fmt.Errorf("unable to parse sequencing start date: %w", err)
+			}
+			header.SequencingStartDate = t.Format("02/01/2006")
+		case "Instrument Name":
+			header.InstrumentName = value
+		case "Run Number":
+			header.RunNumber = value
+		case "Flow Cell Position":
+			header.FlowCellPosition = value
+			if !(value == "A" || value == "B") {
+				return RunSheet{Filename: fn}, fmt.Errorf("flow cell positions was %s. Expected A or B", value)
+			}
+		case "Flow Cell ID":
+			header.FlowCellID = value
+		case "Run Name":
+			header.RunName = value
+		case "Flow Cell Type":
+			header.FlowCellType = value
+		case "Version":
+			header.Version = value
+		case "Run Type":
+			header.RunType = value
+		case "Workflow":
+			header.Workflow = value
+		case "Indexing":
+			header.Indexing = value
+		case "Read 1 Cycles":
+			n, err := strconv.Atoi(value)
+			if err != nil {
+				return RunSheet{Filename: fn}, err
+			}
+			header.Read1Cycles = n
+		case "Read 2 Cycles":
+			n, err := strconv.Atoi(value)
+			if err != nil {
+				return RunSheet{Filename: fn}, err
+			}
+			header.Read2Cycles = n
+		case "i7 Index Read Cycles":
+			n, err := strconv.Atoi(value)
+			if err != nil {
+				return RunSheet{Filename: fn}, err
+			}
+			header.I7IndexReadCycles = n
+		case "i5 Index Read Cycles":
+			n, err := strconv.Atoi(value)
+			if err != nil {
+				return RunSheet{Filename: fn}, err
+			}
+			header.I5IndexReadCycles = n
+		}
+	}
+
 	for rows.Next() {
 		rowIdx++
 		row, err := rows.Columns()
@@ -76,68 +154,14 @@ func New(fn string) (RunSheet, error) {
 		if len(row) == 0 {
 			return RunSheet{Filename: fn}, fmt.Errorf("found 0 length row: %d", rowIdx)
 		}
-		switch row[0] {
-		case "Sequencing Start Date":
-			if row[1] == "" {
-				return RunSheet{Filename: fn}, fmt.Errorf("sequencing start date is empty: %s", filepath.Base(fn))
-			}
-			t, err := time.Parse("01-02-06", row[1])
-			if err != nil {
-				return RunSheet{Filename: fn}, fmt.Errorf("unable to parse sequencing start date: %w", err)
-			}
-			header.SequencingStartDate = t.Format("02/01/2006")
-		case "Instrument Name":
-			header.InstrumentName = row[1]
-		case "Run Number":
-			header.RunNumber = row[1]
-		case "Flow Cell Position":
-			header.FlowCellPosition = row[1]
-			if !(row[1] == "A" || row[1] == "B") {
-				return RunSheet{Filename: fn}, fmt.Errorf("flow cell positions was %s. Expected A or B", row[1])
-			}
-		case "Flow Cell ID":
-			header.FlowCellID = row[1]
-		case "Run Name":
-			header.RunName = row[1]
-		case "Flow Cell Type":
-			header.FlowCellType = row[1]
-		case "Version":
-			header.Version = row[1]
-		case "Run Type":
-			header.RunType = row[1]
-		case "Workflow":
-			header.Workflow = row[1]
-		case "Indexing":
-			header.Indexing = row[1]
-		case "Read 1 Cycles":
-			n, err := strconv.Atoi(row[1])
-			if err != nil {
-				return RunSheet{Filename: fn}, err
-			}
-			header.Read1Cycles = n
-		case "Read 2 Cycles":
-			n, err := strconv.Atoi(row[1])
-			if err != nil {
-				return RunSheet{Filename: fn}, err
-			}
-			header.Read2Cycles = n
-		case "i7 Index Read Cycles":
-			n, err := strconv.Atoi(row[1])
-			if err != nil {
-				return RunSheet{Filename: fn}, err
-			}
-			header.I7IndexReadCycles = n
-		case "i5 Index Read Cycles":
-			n, err := strconv.Atoi(row[1])
-			if err != nil {
-				return RunSheet{Filename: fn}, err
-			}
-			header.I5IndexReadCycles = n
-		}
+
 		if rowIdx == headerRow {
 			for i, col := range row {
 				headerMap[col] = i
 			}
+		}
+		if rowIdx > headerRow {
+			break
 		}
 	}
 	if err := rows.Error(); err != nil {
