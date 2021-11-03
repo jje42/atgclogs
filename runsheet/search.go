@@ -1,7 +1,10 @@
 package runsheet
 
 import (
+	"encoding/csv"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -90,4 +93,59 @@ func isNotExcluded(fn string, excludeList []string) bool {
 		}
 	}
 	return ret
+}
+
+func FindByNumber(n int, runsheetdir string) (RunSheet, error) {
+	num := fmt.Sprintf("%04d", n)
+	sheet, err := findByLookup(num, runsheetdir)
+	if err != nil {
+		sheet, err = findByParse(num, runsheetdir)
+		if err != nil {
+			return RunSheet{}, fmt.Errorf("failed to find run sheet: %w", err)
+		}
+	}
+	return sheet, nil
+}
+
+func findByParse(num, runsheetdir string) (RunSheet, error) {
+	sheets, err := ParseRunsheets(runsheetdir, []string{})
+	if err != nil {
+		return RunSheet{}, err
+	}
+	if len(sheets) == 0 {
+		return RunSheet{}, errors.New("no run sheets found in directory")
+	}
+	for _, sheet := range sheets {
+		if sheet.Header.RunNumber == num {
+			return sheet, nil
+		}
+	}
+	return RunSheet{}, errors.New("failed to identify run sheet")
+}
+
+func findByLookup(num string, runsheetdir string) (RunSheet, error) {
+	r, err := os.Open(filepath.Join(runsheetdir, "lookup.csv"))
+	if err != nil {
+		return RunSheet{}, err
+	}
+	defer r.Close()
+	reader := csv.NewReader(r)
+	fn := ""
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return RunSheet{}, err
+		}
+		if record[0] == num {
+			fn = record[1]
+		}
+	}
+	if fn == "" {
+		return RunSheet{}, errors.New("failed to identify run sheet")
+	}
+
+	return New(fn)
 }
