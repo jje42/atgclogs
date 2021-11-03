@@ -388,3 +388,19 @@ func GetRawCellValue(f *excelize.File, sheet, axis string) (string, error) {
 	}
 	return value, nil
 }
+
+func New(fn, password string) (map[string]Sample, error) {
+	scanner, err := NewScanner(fn, password)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create log scanner: %w", err)
+	}
+	sampleLog := make(map[string]Sample)
+	for scanner.Scan() {
+		sample := scanner.Sample()
+		sampleLog[sample.UIN] = sample
+	}
+	if err := scanner.Error(); err != nil {
+		return nil, fmt.Errorf("failed to scan log: %w", err)
+	}
+	return sampleLog, nil
+}
