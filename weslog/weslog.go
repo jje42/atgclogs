@@ -34,7 +34,7 @@ type Sample struct {
 	NucleicType          string `csv:"nucleic_type"`
 	PrimaryTumourSite    string `csv:"primary_tumour_site"`
 	TumourContent        string `csv:"tumour_content"`
-	RequestDate          string `csv:"request_date"`
+	RequestDate          Date   `csv:"request_date"`
 	RequestingDoctor     string `csv:"requesting_doctor"`
 	Consultant           string `csv:"consultant"`
 	SourceLaboratory     string `csv:"source_laboratory"`
@@ -236,10 +236,19 @@ func (s *Scanner) readSample() (Sample, error) {
 	if err != nil {
 		return Sample{}, err
 	}
-	requestDate, err := s.getFormattedString("Request Date", s.curRow)
+	// requestDate, err := s.getFormattedString("Request Date", s.curRow)
+	// if err != nil {
+	// 	return Sample{}, err
+	// }
+
+	requestDate, err := s.getTime("Request Date", s.curRow)
 	if err != nil {
-		return Sample{}, err
+		// return Sample{}, fmt.Errorf("failed to get DOB: %w", err)
+		log.Printf("failed to get Request Date, using null value: %s", err)
+		requestDate = time.Time{}
+
 	}
+
 	requestingDoctor, err := s.getFormattedString("Requesting Doctor", s.curRow)
 	if err != nil {
 		return Sample{}, err
@@ -289,7 +298,7 @@ func (s *Scanner) readSample() (Sample, error) {
 		NucleicType:          nucleicType,
 		PrimaryTumourSite:    primaryTumourSite,
 		TumourContent:        tumourContent,
-		RequestDate:          requestDate,
+		RequestDate:          Date{requestDate},
 		RequestingDoctor:     requestingDoctor,
 		Consultant:           consultant,
 		SourceLaboratory:     sourceLaboratory,
