@@ -2,7 +2,6 @@ package weslog
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -44,12 +43,13 @@ type Sample struct {
 }
 
 type Scanner struct {
-	err        error
-	f          *excelize.File
-	headerMap  map[string]int
-	sheetName  string
-	curRow     int
-	nextSample Sample
+	err                 error
+	f                   *excelize.File
+	headerMap           map[string]int
+	sheetName           string
+	curRow              int
+	nextSample          Sample
+	allowMissingColumns bool
 }
 
 func NewScanner(fn, password string) (*Scanner, error) {
@@ -57,18 +57,28 @@ func NewScanner(fn, password string) (*Scanner, error) {
 	if err != nil {
 		return &Scanner{}, err
 	}
-	sheet := "ATG Sample Log"
+	sheet := "Research Sample Log"
+	for _, name := range f.GetSheetList() {
+		if name == "ATG Sample Log" {
+			sheet = "ATG Sample Log"
+		}
+	}
 	headerMap, err := getHeaderMap(f, sheet)
 	if err != nil {
 		return &Scanner{}, err
 	}
 	return &Scanner{
-		err:       nil,
-		curRow:    3,
-		f:         f,
-		sheetName: sheet,
-		headerMap: headerMap,
+		err:                 nil,
+		curRow:              3,
+		f:                   f,
+		sheetName:           sheet,
+		headerMap:           headerMap,
+		allowMissingColumns: false,
 	}, nil
+}
+
+func (s *Scanner) AllowMissingColumns() {
+	s.allowMissingColumns = true
 }
 
 func getHeaderMap(f *excelize.File, sheet string) (map[string]int, error) {
@@ -101,14 +111,14 @@ func (s *Scanner) Scan() bool {
 		return false
 	}
 	// Do
-	for sample.Status == "NO TEST - Do No Process" || sample.Status == "Duplicate - Exclude" {
-		s.curRow++
-		sample, err = s.readSample()
-		if err != nil {
-			s.err = err
-			return false
-		}
-	}
+	//for sample.Status == "NO TEST - Do No Process" || sample.Status == "Duplicate - Exclude" {
+	//        s.curRow++
+	//        sample, err = s.readSample()
+	//        if err != nil {
+	//                s.err = err
+	//                return false
+	//        }
+	//}
 	if sample.UIN == "" && sample.SubjectID == "" {
 		s.err = nil
 		return false
@@ -175,7 +185,7 @@ func (s *Scanner) readSample() (Sample, error) {
 	dob, err := s.getTime("DOB", s.curRow)
 	if err != nil {
 		// return Sample{}, fmt.Errorf("failed to get DOB: %w", err)
-		log.Printf("failed to get DOB, using null value: %s", err)
+		// log.Printf("failed to get DOB, using null value: %s", err)
 		dob = time.Time{}
 
 	}
@@ -244,7 +254,7 @@ func (s *Scanner) readSample() (Sample, error) {
 	requestDate, err := s.getTime("Request Date", s.curRow)
 	if err != nil {
 		// return Sample{}, fmt.Errorf("failed to get DOB: %w", err)
-		log.Printf("failed to get Request Date, using null value: %s", err)
+		//log.Printf("failed to get Request Date, using null value: %s", err)
 		requestDate = time.Time{}
 
 	}
@@ -320,6 +330,9 @@ func (s *Scanner) Sample() Sample {
 func (s *Scanner) getFormattedString(column string, rowIdx int) (string, error) {
 	idx, ok := s.headerMap[column]
 	if !ok {
+		if s.allowMissingColumns {
+			return "", nil
+		}
 		return "", fmt.Errorf("unable to find index for '%s' column", column)
 	}
 	cellName, err := excelize.CoordinatesToCellName(idx+1, rowIdx+1)
@@ -336,6 +349,9 @@ func (s *Scanner) getFormattedString(column string, rowIdx int) (string, error) 
 func (s *Scanner) getTime(column string, rowIdx int) (time.Time, error) {
 	idx, ok := s.headerMap[column]
 	if !ok {
+		if s.allowMissingColumns {
+			return time.Time{}, nil
+		}
 		return time.Time{}, fmt.Errorf("unable to find index for '%s' column", column)
 	}
 	cellName, err := excelize.CoordinatesToCellName(idx+1, rowIdx+1)
