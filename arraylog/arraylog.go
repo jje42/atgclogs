@@ -111,11 +111,17 @@ func (s *Scanner) Scan() bool {
 		s.err = err
 		return false
 	}
+	infinumuID, err := s.getFormattedString("Infinium ID", s.curRow)
+	if err != nil {
+		s.err = err
+		return false
+	}
 	sample := Sample{
 		UIN:                uin,
 		SubjectID:          subjectID,
 		ProjectID:          projectID,
 		BeadChipVersion:    beadChipVersion,
+		InfiniumID:         infinumuID,
 		SentrixID:          sentrixID,
 		SentrixPosition:    sentrixPosition,
 		IlluminaID:         sentrixID + "_" + sentrixPosition,
